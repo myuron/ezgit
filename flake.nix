@@ -29,7 +29,7 @@
             program = toString (pkgs.writeShellScript "fmt" ''
               set -e
               echo "==> Running formatter..."
-              go fmt ./... && echo "formatter complete"
+              go fmt ./...
             '');
           };
           lint = {
@@ -37,7 +37,8 @@
             program = toString (pkgs.writeShellScript "lint" ''
               set -e
               echo "==> Running linter..."
-              go vet ./... && golint -set_exit_status ./... && echo "linter complete"
+              go vet ./...
+              golint -set_exit_status ./...
             '');
           };
           test = {
@@ -45,7 +46,7 @@
             program = toString (pkgs.writeShellScript "test" ''
               set -e
               echo "==> Running test..."
-              go test -cover ./... && echo "test complete"
+              go test -cover ./...
             '');
           };
           build = {
@@ -53,7 +54,7 @@
             program = toString (pkgs.writeShellScript "build" ''
               set -e
               echo "==> Running build..."
-              go build . && echo "build complete"
+              go build ./...
             '');
           };
           ci = {
@@ -61,15 +62,16 @@
             program = toString (pkgs.writeShellScript "check" ''
               set -e
               echo "==> Running formatter..."
-              go fmt ./... && echo "formatter complete"
+              go fmt ./...
               echo "==> Running linter..."
-              go vet ./... && golint -set_exit_status ./... && echo "linter complete"
+              go vet ./...
+              golint -set_exit_status ./...
               echo "==> Running vulnerability check..."
-              govulncheck ./... && echo "vulnerability check..."
+              govulncheck ./...
               echo "==> Running test..."
-              go test -cover ./... && echo "test complete"
+              go test -cover ./...
               echo "==> Running build..."
-              go build . && echo "build complete"
+              go build ./...
             '');
           };
         };

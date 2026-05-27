@@ -12,5 +12,4 @@ jobs:
       - uses: DeterminateSystems/determinate-nix-action@main
       - name: check
         run: |
-          nix develop
-          nix run .#ci
+          nix develop --command nix run .#ci
