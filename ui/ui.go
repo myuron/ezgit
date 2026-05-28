@@ -63,8 +63,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return m, nil
 				}
 				repo := "."
-				msg := m.prefix + ": " + m.textInput.Value()
-				if err := gitcontroller.Commit(repo, msg); err != nil {
+				commitMsg := m.prefix + ": " + m.textInput.Value()
+				if err := gitcontroller.Commit(repo, commitMsg); err != nil {
 					m.Err = err
 				}
 				return m, tea.Quit
