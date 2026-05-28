@@ -20,6 +20,13 @@ func TestLoadAuthor(t *testing.T) {
 	}
 
 	t.Run("success", func(t *testing.T) {
+		home := t.TempDir()
+		cfg := "[user]\n\tname = test\n\temail = test@example.com\n"
+		if err := os.WriteFile(filepath.Join(home, ".gitconfig"), []byte(cfg), 0666); err != nil {
+			t.Fatal(err)
+		}
+		t.Setenv("HOME", home)
+
 		author, err := LoadAuthor(tmpDir)
 		if err != nil {
 			t.Fatal(err)
