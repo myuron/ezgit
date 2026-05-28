@@ -10,7 +10,7 @@ import (
 )
 
 // Commit ... A function that commits based on the received message
-func Commit(path string, message string) error {
+func Commit(path string, commitMsg string) error {
 	repo, err := git.PlainOpenWithOptions(path, &git.PlainOpenOptions{DetectDotGit: true})
 	if err != nil {
 		return err
@@ -52,6 +52,6 @@ func Commit(path string, message string) error {
 		return errors.New("nothing staged to commit (use `git add` first)")
 	}
 
-	_, err = w.Commit(message, &git.CommitOptions{Author: author})
+	_, err = w.Commit(commitMsg, &git.CommitOptions{Author: author})
 	return err
 }
