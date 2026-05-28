@@ -102,8 +102,8 @@ func TestCommit(t *testing.T) {
 
 		// Commit
 		commitMsg := "feat: init"
-		if err := Commit(tmpDir, commitMsg, author); err != nil {
-			t.Log(err)
+		if err := Commit(tmpDir, commitMsg, author); err == nil {
+			t.Fatal("expected error when nothing is staged, got nil")
 		}
 	})
 }
