@@ -62,8 +62,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if strings.TrimSpace(m.textInput.Value()) == "" {
 					return m, nil
 				}
-				s := m.prefix + ": " + m.textInput.Value()
-				if err := gitcontroller.Commit(s); err != nil {
+				repo := "."
+				msg := m.prefix + ": " + m.textInput.Value()
+				if err := gitcontroller.Commit(repo, msg); err != nil {
 					m.Err = err
 				}
 				return m, tea.Quit

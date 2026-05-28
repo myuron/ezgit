@@ -10,8 +10,8 @@ import (
 )
 
 // Commit ... A function that commits based on the received message
-func Commit(message string) error {
-	repo, err := git.PlainOpenWithOptions(".", &git.PlainOpenOptions{DetectDotGit: true})
+func Commit(path string, message string) error {
+	repo, err := git.PlainOpenWithOptions(path, &git.PlainOpenOptions{DetectDotGit: true})
 	if err != nil {
 		return err
 	}
