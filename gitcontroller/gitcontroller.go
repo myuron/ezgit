@@ -9,8 +9,33 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/object"
 )
 
+// LoadAuthor ... A function that load the commit author
+func LoadAuthor(path string) (*object.Signature, error) {
+	repo, err := git.PlainOpenWithOptions(path, &git.PlainOpenOptions{DetectDotGit: true})
+	if err != nil {
+		return nil, err
+	}
+
+	cfg, err := repo.ConfigScoped(config.GlobalScope)
+	if err != nil {
+		return nil, err
+	}
+
+	if cfg.User.Name == "" || cfg.User.Email == "" {
+		return nil, errors.New("git user.name and user.email must be configured")
+	}
+
+	author := &object.Signature{
+		Name:  cfg.User.Name,
+		Email: cfg.User.Email,
+		When:  time.Now(),
+	}
+
+	return author, nil
+}
+
 // Commit ... A function that commits based on the received message
-func Commit(path string, commitMsg string) error {
+func Commit(path string, commitMsg string, author *object.Signature) error {
 	repo, err := git.PlainOpenWithOptions(path, &git.PlainOpenOptions{DetectDotGit: true})
 	if err != nil {
 		return err
@@ -19,21 +44,6 @@ func Commit(path string, commitMsg string) error {
 	w, err := repo.Worktree()
 	if err != nil {
 		return err
-	}
-
-	cfg, err := repo.ConfigScoped(config.GlobalScope)
-	if err != nil {
-		return err
-	}
-
-	if cfg.User.Name == "" || cfg.User.Email == "" {
-		return errors.New("git user.name and user.email must be configured")
-	}
-
-	author := &object.Signature{
-		Name:  cfg.User.Name,
-		Email: cfg.User.Email,
-		When:  time.Now(),
 	}
 
 	status, err := w.Status()

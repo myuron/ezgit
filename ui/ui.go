@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"charm.land/bubbles/v2/textinput"
@@ -64,7 +65,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				repo := "."
 				commitMsg := m.prefix + ": " + m.textInput.Value()
-				if err := gitcontroller.Commit(repo, commitMsg); err != nil {
+				author, err := gitcontroller.LoadAuthor(repo)
+				if err != nil {
+					log.Fatal(err)
+				}
+				if err := gitcontroller.Commit(repo, commitMsg, author); err != nil {
 					m.Err = err
 				}
 				return m, tea.Quit
