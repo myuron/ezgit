@@ -9,13 +9,17 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/object"
 )
 
-// LoadAuthor ... A function that load the commit author
-func LoadAuthor(path string) (*object.Signature, error) {
+// OpenRepository ... A functions to open a ropository
+func OpenRepository(path string) (*git.Repository, error) {
 	repo, err := git.PlainOpenWithOptions(path, &git.PlainOpenOptions{DetectDotGit: true})
 	if err != nil {
 		return nil, err
 	}
+	return repo, nil
+}
 
+// LoadAuthor ... A function that load the commit author
+func LoadAuthor(repo *git.Repository) (*object.Signature, error) {
 	cfg, err := repo.ConfigScoped(config.GlobalScope)
 	if err != nil {
 		return nil, err
@@ -35,12 +39,7 @@ func LoadAuthor(path string) (*object.Signature, error) {
 }
 
 // Commit ... A function that commits based on the received message
-func Commit(path string, commitMsg string, author *object.Signature) error {
-	repo, err := git.PlainOpenWithOptions(path, &git.PlainOpenOptions{DetectDotGit: true})
-	if err != nil {
-		return err
-	}
-
+func Commit(repo *git.Repository, commitMsg string, author *object.Signature) error {
 	w, err := repo.Worktree()
 	if err != nil {
 		return err
