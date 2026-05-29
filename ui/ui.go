@@ -62,8 +62,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if strings.TrimSpace(m.textInput.Value()) == "" {
 					return m, nil
 				}
-				repo := "."
+				repoPath := "."
 				commitMsg := m.prefix + ": " + m.textInput.Value()
+				repo, err := gitcontroller.OpenRepository(repoPath)
+				if err != nil {
+					m.Err = err
+					return m, tea.Quit
+				}
 				author, err := gitcontroller.LoadAuthor(repo)
 				if err != nil {
 					m.Err = err
