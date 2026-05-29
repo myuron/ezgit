@@ -5,105 +5,123 @@ import (
 	"path/filepath"
 	"testing"
 	"time"
-
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestLoadAuthor(t *testing.T) {
-	// Creating a temporary directory
-	tmpDir := t.TempDir()
+func TestOpenRepository(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		tmpRepoDir := t.TempDir()
+		if _, err := git.PlainInit(tmpRepoDir, false); err != nil {
+			t.Fatal(err)
+		}
+		repo, err := OpenRepository(tmpRepoDir)
+		assert.NoError(t, err)
+		assert.NotNil(t, repo)
+	})
+	t.Run("failure: not repository", func(t *testing.T) {
+		tmpNotRepoDir := t.TempDir()
+		repo, err := OpenRepository(tmpNotRepoDir)
+		assert.Error(t, err)
+		assert.Nil(t, repo)
+	})
+}
 
-	// Creating a Repository
-	if _, err := git.PlainInit(tmpDir, false); err != nil {
+func TestLoadAutor(t *testing.T) {
+	tmpRepoDir := t.TempDir()
+	if _, err := git.PlainInit(tmpRepoDir, false); err != nil {
 		t.Fatal(err)
 	}
-
+	repo, err := git.PlainOpenWithOptions(tmpRepoDir, &git.PlainOpenOptions{DetectDotGit: true})
+	if err != nil {
+		t.Fatal(err)
+	}
 	t.Run("success", func(t *testing.T) {
-		home := t.TempDir()
-		cfg := "[user]\n\tname = test\n\temail = test@example.com\n"
-		if err := os.WriteFile(filepath.Join(home, ".gitconfig"), []byte(cfg), 0666); err != nil {
-			t.Fatal(err)
-		}
-		t.Setenv("HOME", home)
-
-		author, err := LoadAuthor(tmpDir)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if author.Name == "" || author.Email == "" {
-			t.Errorf("expected non-empty author, got %+v", author)
-		}
-	})
-	t.Run("undefined Config", func(t *testing.T) {
 		t.Setenv("HOME", t.TempDir())
 		t.Setenv("GIT_CONFIG_GLOBAL", "/dev/null")
-		author, err := LoadAuthor(tmpDir)
-		if err == nil {
-			t.Fatalf("expected error when git config is undefined, got author=%+v", author)
+		cfg := "[user]\n\tname = test\n\temail = test@example.com\n"
+		if err := os.WriteFile(filepath.Join(tmpRepoDir, ".gitconfig"), []byte(cfg), 0666); err != nil {
+			t.Fatal(err)
 		}
-		if author != nil {
-			t.Errorf("expected nil author when err != nil, got %+v", author)
+		t.Setenv("HOME", tmpRepoDir)
+		author, err := LoadAuthor(repo)
+		assert.NoError(t, err)
+		assert.NotNil(t, author)
+	})
+	t.Run("failure: malformed global config", func(t *testing.T) {
+		t.Setenv("HOME", t.TempDir())
+		t.Setenv("GIT_CONFIG_GLOBAL", "/dev/null")
+		cfg := "[user\n\tname = test\n"
+		if err := os.WriteFile(filepath.Join(tmpRepoDir, ".gitconfig"), []byte(cfg), 0666); err != nil {
+			t.Fatal(err)
 		}
+		t.Setenv("HOME", tmpRepoDir)
+		author, err := LoadAuthor(repo)
+		assert.Error(t, err)
+		assert.Nil(t, author)
+	})
+	t.Run("failure: undefined git config", func(t *testing.T) {
+		t.Setenv("HOME", t.TempDir())
+		t.Setenv("GIT_CONFIG_GLOBAL", "/dev/null")
+		author, err := LoadAuthor(repo)
+		assert.Error(t, err)
+		assert.Nil(t, author)
 	})
 }
 
 func TestCommit(t *testing.T) {
-	// Creating a temporary directory
-	tmpDir := t.TempDir()
-	tmpFile := "sample.txt"
-	f := filepath.Join(tmpDir, tmpFile)
-	err := os.WriteFile(f, []byte("hoge"), 0666)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Creating a Repository
-	repo, err := git.PlainInit(tmpDir, false)
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	t.Run("success", func(t *testing.T) {
-		// Stage the file
+		tmpRepoDir := t.TempDir()
+		tmpFile := "sample.txt"
+		f := filepath.Join(tmpRepoDir, tmpFile)
+		err := os.WriteFile(f, []byte("hoge"), 0666)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := git.PlainInit(tmpRepoDir, false); err != nil {
+			t.Fatal(err)
+		}
+		repo, err := git.PlainOpenWithOptions(tmpRepoDir, &git.PlainOpenOptions{DetectDotGit: true})
+		if err != nil {
+			t.Fatal(err)
+		}
 		w, err := repo.Worktree()
 		if err != nil {
 			t.Fatal(err)
 		}
-
 		if _, err := w.Add(tmpFile); err != nil {
 			t.Fatal(err)
 		}
-
+		commitMsg := "feat: test"
 		author := &object.Signature{
 			Name:  "test",
 			Email: "test@example.com",
 			When:  time.Now(),
 		}
+		err = Commit(repo, commitMsg, author)
+		assert.NoError(t, err)
 
-		// Commit
-		commitMsg := "feat: init"
-		if err := Commit(tmpDir, commitMsg, author); err != nil {
+		head, err := repo.Head()
+		assert.NoError(t, err)
+		assert.NotNil(t, head)
+	})
+	t.Run("failure: nothing staged", func(t *testing.T) {
+		tmpRepoDir := t.TempDir()
+		if _, err := git.PlainInit(tmpRepoDir, false); err != nil {
 			t.Fatal(err)
 		}
-	})
-	t.Run("not staging file", func(t *testing.T) {
-		// Stage the file
-		_, err := repo.Worktree()
+		repo, err := git.PlainOpenWithOptions(tmpRepoDir, &git.PlainOpenOptions{DetectDotGit: true})
 		if err != nil {
 			t.Fatal(err)
 		}
-
+		commitMsg := "feat: test"
 		author := &object.Signature{
 			Name:  "test",
 			Email: "test@example.com",
 			When:  time.Now(),
 		}
-
-		// Commit
-		commitMsg := "feat: init"
-		if err := Commit(tmpDir, commitMsg, author); err == nil {
-			t.Fatal("expected error when nothing is staged, got nil")
-		}
+		err = Commit(repo, commitMsg, author)
+		assert.Error(t, err)
 	})
 }
