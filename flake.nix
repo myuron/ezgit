@@ -46,7 +46,8 @@
             program = toString (pkgs.writeShellScript "test" ''
               set -e
               echo "==> Running test..."
-              go test -cover ./...
+              go test -v -cover ./... -coverprofile=c.out
+              go tool cover -html=c.out -o ./c.html
             '');
           };
           build = {
