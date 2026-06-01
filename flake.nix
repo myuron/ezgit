@@ -19,8 +19,8 @@
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [
             go
-            golint
             govulncheck
+            golangci-lint
           ];
         };
         apps = {
@@ -38,7 +38,7 @@
               set -e
               echo "==> Running linter..."
               go vet ./...
-              golint -set_exit_status ./...
+              golangci-lint run ./...
             '');
           };
           test = {
@@ -46,7 +46,8 @@
             program = toString (pkgs.writeShellScript "test" ''
               set -e
               echo "==> Running test..."
-              go test -cover ./...
+              go test -v -cover ./... -coverprofile=c.out
+              go tool cover -html=c.out -o ./c.html
             '');
           };
           build = {
@@ -54,7 +55,7 @@
             program = toString (pkgs.writeShellScript "build" ''
               set -e
               echo "==> Running build..."
-              go build ./...
+              go build .
             '');
           };
           ci = {
@@ -65,13 +66,13 @@
               go fmt ./...
               echo "==> Running linter..."
               go vet ./...
-              golint -set_exit_status ./...
+              golangci-lint run ./...
               echo "==> Running vulnerability check..."
               govulncheck ./...
               echo "==> Running test..."
               go test -cover ./...
               echo "==> Running build..."
-              go build ./...
+              go build .
             '');
           };
         };
