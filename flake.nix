@@ -55,7 +55,7 @@
             program = toString (pkgs.writeShellScript "build" ''
               set -e
               echo "==> Running build..."
-              go build ./...
+              go build .
             '');
           };
           ci = {
@@ -72,7 +72,7 @@
               echo "==> Running test..."
               go test -cover ./...
               echo "==> Running build..."
-              go build ./...
+              go build .
             '');
           };
         };
