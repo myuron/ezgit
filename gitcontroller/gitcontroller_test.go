@@ -1,13 +1,15 @@
 package gitcontroller
 
 import (
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing/object"
-	"github.com/stretchr/testify/assert"
+	"log"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestOpenRepository(t *testing.T) {
@@ -23,7 +25,10 @@ func TestOpenRepository(t *testing.T) {
 	t.Run("success: sub directory", func(t *testing.T) {
 		tmpRepoDir := t.TempDir()
 		tmpRepoSubDir := tmpRepoDir + "/test"
-		os.Mkdir(tmpRepoSubDir, 0777)
+		err := os.Mkdir(tmpRepoSubDir, 0777)
+		if err != nil {
+			log.Fatal(err)
+		}
 		if _, err := git.PlainInit(tmpRepoDir, false); err != nil {
 			t.Fatal(err)
 		}
