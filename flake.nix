@@ -19,8 +19,8 @@
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [
             go
-            golint
             govulncheck
+            golangci-lint
           ];
         };
         apps = {
@@ -38,7 +38,7 @@
               set -e
               echo "==> Running linter..."
               go vet ./...
-              golint -set_exit_status ./...
+              golangci-lint run ./...
             '');
           };
           test = {
@@ -66,7 +66,7 @@
               go fmt ./...
               echo "==> Running linter..."
               go vet ./...
-              golint -set_exit_status ./...
+              golangci-lint run ./...
               echo "==> Running vulnerability check..."
               govulncheck ./...
               echo "==> Running test..."
