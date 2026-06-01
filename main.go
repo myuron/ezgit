@@ -9,6 +9,7 @@ import (
 )
 
 func main() {
+	// entry point
 	p := tea.NewProgram(ui.InitialModel())
 	m, err := p.Run()
 	if err != nil {
@@ -16,8 +17,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	final, ok := m.(ui.Model)
-	if ok && final.Err != nil {
+	// crashes if an error occurs during a status update
+	final := m.(ui.Model)
+	if final.Err != nil {
 		fmt.Fprintln(os.Stderr, final.Err)
 		os.Exit(1)
 	}
