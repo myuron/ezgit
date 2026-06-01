@@ -15,7 +15,9 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-	if final, ok := m.(ui.Model); ok && final.Err != nil {
+
+	final, ok := m.(ui.Model)
+	if ok && final.Err != nil {
 		fmt.Fprintln(os.Stderr, final.Err)
 		os.Exit(1)
 	}
