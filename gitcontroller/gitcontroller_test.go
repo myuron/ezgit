@@ -1,13 +1,13 @@
 package gitcontroller
 
 import (
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/stretchr/testify/assert"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing/object"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestOpenRepository(t *testing.T) {
@@ -17,6 +17,17 @@ func TestOpenRepository(t *testing.T) {
 			t.Fatal(err)
 		}
 		repo, err := OpenRepository(tmpRepoDir)
+		assert.NoError(t, err)
+		assert.NotNil(t, repo)
+	})
+	t.Run("success: sub directory", func(t *testing.T) {
+		tmpRepoDir := t.TempDir()
+		tmpRepoSubDir := tmpRepoDir + "/test"
+		os.Mkdir(tmpRepoSubDir, 0777)
+		if _, err := git.PlainInit(tmpRepoDir, false); err != nil {
+			t.Fatal(err)
+		}
+		repo, err := OpenRepository(tmpRepoSubDir)
 		assert.NoError(t, err)
 		assert.NotNil(t, repo)
 	})
@@ -52,7 +63,7 @@ func TestLoadAutor(t *testing.T) {
 	t.Run("failure: malformed global config", func(t *testing.T) {
 		t.Setenv("HOME", t.TempDir())
 		t.Setenv("GIT_CONFIG_GLOBAL", "/dev/null")
-		cfg := "[user\n\tname = test\n"
+		cfg := "[user]\n\tname = test\n"
 		if err := os.WriteFile(filepath.Join(tmpRepoDir, ".gitconfig"), []byte(cfg), 0666); err != nil {
 			t.Fatal(err)
 		}
