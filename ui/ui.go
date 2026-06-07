@@ -11,12 +11,18 @@ import (
 
 // Model ... A structure for managing the application's state
 type Model struct {
-	prefixes      []string
+	prefixDetails []PrefixDetail
 	cursor        int
-	prefix        string
+	choicedPrefix string 
 	currentScreen screen
 	textInput     textinput.Model
 	Err           error
+}
+
+// PrefixDetail ... A structure for conbining prefix and description
+type PrefixDetail struct {
+	prefix      string
+	description string
 }
 
 type screen int
@@ -30,7 +36,6 @@ const (
 func (m Model) Init() tea.Cmd {
 	return textinput.Blink
 }
-
 // Update ... A function that handles incoming events and updates the model accordingly
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch m.currentScreen {
@@ -39,7 +44,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case tea.KeyPressMsg:
 			switch msg.String() {
 			case "j":
-				if m.cursor < len(m.prefixes)-1 {
+				if m.cursor < len(m.prefixDetails)-1 {
 					m.cursor++
 				}
 			case "k":
@@ -47,7 +52,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.cursor--
 				}
 			case "enter":
-				m.prefix = m.prefixes[m.cursor]
+				m.choicedPrefix = m.prefixDetails[m.cursor].prefix
 				m.currentScreen = messageScreen
 			case "ctrl+c", "esc":
 				return m, tea.Quit
@@ -63,7 +68,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return m, nil
 				}
 				repoPath := "."
-				commitMsg := m.prefix + ": " + m.textInput.Value()
+				commitMsg := m.choicedPrefix + ": " + m.textInput.Value()
 				repo, err := gitcontroller.OpenRepository(repoPath)
 				if err != nil {
 					m.Err = err
@@ -93,17 +98,17 @@ func (m Model) View() tea.View {
 	switch m.currentScreen {
 	case prefixScreen:
 		s := "Select Prefix\n\n"
-		for i, choice := range m.prefixes {
+		for i, p := range m.prefixDetails {
 			cursor := " "
 			if m.cursor == i {
 				cursor = ">"
 			}
-			s += fmt.Sprintf("%s %s\n", cursor, choice)
+			s += fmt.Sprintf("%s %s: %s\n", cursor, p.prefix, p.description)
 		}
 		return tea.NewView(s)
 	case messageScreen:
 		s := "Write Message\n\n"
-		s += m.prefix
+		s += m.choicedPrefix
 		s += "\n"
 		s += m.textInput.View()
 		return tea.NewView(s)
@@ -119,20 +124,20 @@ func InitialModel() Model {
 	ti.CharLimit = 72 // Maximum number of characters in a commit title before it wraps
 	ti.SetWidth(72)
 	return Model{
-		prefixes: []string{
-			"fix",
-			"feat",
-			"build",
-			"chore",
-			"ci",
-			"docs",
-			"perf",
-			"refactor",
-			"revert",
-			"style",
-			"test",
+		prefixDetails: []PrefixDetail{
+			{"fix", "a commit that fixes a bug."},
+			{"feat", "a commit that adds new functionality"},
+			{"build", "changes that affect the build system or external dependencies."},
+			{"chore", "other changes that don't modify src or test files."},
+			{"ci", "changes to our CI configuration files and scripts."},
+			{"docs", "a commit that adds or improves a documentation."},
+			{"perf", "a commit that improves performance, without functional changes."},
+			{"refactor", "a code change that neither fixes a bug nor adds a feature."},
+			{"revert", "reverts a previous commit."},
+			{"style", "changes that do not affect the meaning of the code."},
+			{"test", "adding missing tests or correcting existing tests."},
 		},
-		prefix:        "",
+		choicedPrefix:        "",
 		currentScreen: prefixScreen,
 		textInput:     ti,
 	}
