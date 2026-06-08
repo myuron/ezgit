@@ -1,0 +1,48 @@
+{
+  "prefixDetails": [
+    {
+      "prefix": "fix",
+      "description": "a commit that fixes a bug."
+    },
+    {
+      "prefix": "feat",
+      "description": "a commit that adds new functionality"
+    },
+    {
+      "prefix": "build",
+      "description": "changes that affect the build system or external dependencies."
+    },
+    {
+      "prefix": "chore",
+      "description": "other changes that don't modify src or test files."
+    },
+    {
+      "prefix": "ci",
+      "description": "changes to our CI configuration files and scripts."
+    },
+    {
+      "prefix": "docs",
+      "description": "a commit that adds or improves a documentation."
+    },
+    {
+      "prefix": "perf",
+      "description": "a commit that improves performance, without functional changes."
+    },
+    {
+      "prefix": "refactor",
+      "description": "a code change that neither fixes a bug nor adds a feature."
+    },
+    {
+      "prefix": "revert",
+      "description": "reverts a previous commit."
+    },
+    {
+      "prefix": "style",
+      "description": "changes that do not affect the meaning of the code."
+    },
+    {
+      "prefix": "test",
+      "description": "adding missing tests or correcting existing tests."
+    }
+  ]
+}

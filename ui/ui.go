@@ -1,7 +1,9 @@
 package ui
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 
 	"charm.land/bubbles/v2/textinput"
@@ -11,18 +13,18 @@ import (
 
 // Model ... A structure for managing the application's state
 type Model struct {
-	prefixDetails []PrefixDetail
+	PrefixDetails []prefixDetail `json:"prefixDetails"`
 	cursor        int
-	choicedPrefix string 
+	choicedPrefix string
 	currentScreen screen
 	textInput     textinput.Model
 	Err           error
 }
 
 // PrefixDetail ... A structure for conbining prefix and description
-type PrefixDetail struct {
-	prefix      string
-	description string
+type prefixDetail struct {
+	Prefix      string `json:"prefix"`
+	Description string `json:"description"`
 }
 
 type screen int
@@ -36,6 +38,7 @@ const (
 func (m Model) Init() tea.Cmd {
 	return textinput.Blink
 }
+
 // Update ... A function that handles incoming events and updates the model accordingly
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch m.currentScreen {
@@ -44,7 +47,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case tea.KeyPressMsg:
 			switch msg.String() {
 			case "j":
-				if m.cursor < len(m.prefixDetails)-1 {
+				if m.cursor < len(m.PrefixDetails)-1 {
 					m.cursor++
 				}
 			case "k":
@@ -52,7 +55,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.cursor--
 				}
 			case "enter":
-				m.choicedPrefix = m.prefixDetails[m.cursor].prefix
+				m.choicedPrefix = m.PrefixDetails[m.cursor].Prefix
 				m.currentScreen = messageScreen
 			case "ctrl+c", "esc":
 				return m, tea.Quit
@@ -98,12 +101,12 @@ func (m Model) View() tea.View {
 	switch m.currentScreen {
 	case prefixScreen:
 		s := "Select Prefix\n\n"
-		for i, p := range m.prefixDetails {
+		for i, p := range m.PrefixDetails {
 			cursor := " "
 			if m.cursor == i {
 				cursor = ">"
 			}
-			s += fmt.Sprintf("%s %s: %s\n", cursor, p.prefix, p.description)
+			s += fmt.Sprintf("%s %s: %s\n", cursor, p.Prefix, p.Description)
 		}
 		return tea.NewView(s)
 	case messageScreen:
@@ -123,22 +126,28 @@ func InitialModel() Model {
 	ti.Focus()
 	ti.CharLimit = 72 // Maximum number of characters in a commit title before it wraps
 	ti.SetWidth(72)
-	return Model{
-		prefixDetails: []PrefixDetail{
-			{"fix", "a commit that fixes a bug."},
-			{"feat", "a commit that adds new functionality"},
-			{"build", "changes that affect the build system or external dependencies."},
-			{"chore", "other changes that don't modify src or test files."},
-			{"ci", "changes to our CI configuration files and scripts."},
-			{"docs", "a commit that adds or improves a documentation."},
-			{"perf", "a commit that improves performance, without functional changes."},
-			{"refactor", "a code change that neither fixes a bug nor adds a feature."},
-			{"revert", "reverts a previous commit."},
-			{"style", "changes that do not affect the meaning of the code."},
-			{"test", "adding missing tests or correcting existing tests."},
-		},
-		choicedPrefix:        "",
+
+	m := Model{
+		choicedPrefix: "",
 		currentScreen: prefixScreen,
 		textInput:     ti,
 	}
+
+	f, err := os.Open("./.ezgit/settings.json")
+	if err != nil {
+		f, err = os.Open("./settings.json")
+		if err != nil {
+			m.Err = err
+			return m
+		}
+	}
+	defer func() {
+		if err := f.Close(); err != nil {
+			m.Err = err
+		}
+	}()
+	if err := json.NewDecoder(f).Decode(&m); err != nil {
+		m.Err = err
+	}
+	return m
 }
