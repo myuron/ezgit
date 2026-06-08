@@ -58,6 +58,14 @@
               go build .
             '');
           };
+          security = {
+            type = "app";
+            program = toString (pkgs.writeShellScript "security" ''
+              set -e
+              echo "==> Running vulnerability check..."
+              govulncheck ./...
+            '');
+          };
           ci = {
             type = "app";
             program = toString (pkgs.writeShellScript "check" ''
@@ -68,8 +76,6 @@
               go vet ./...
               golangci-lint run ./...
               echo "==> Running vulnerability check..."
-              govulncheck ./...
-              echo "==> Running test..."
               go test -cover ./...
               echo "==> Running build..."
               go build .
