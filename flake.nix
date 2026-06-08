@@ -16,6 +16,12 @@
         pkgs = nixpkgs.legacyPackages.${system};
       in
       {
+        packages.default = pkgs.buildGoModule {
+          pname = "ezgit";
+          version = "1.0.0";
+          src = ./.;
+          vendorHash = "sha256-EgR9jdoH2m4Qj5cos5C5pVp2QP4XXt+2b/bktTa0//E=";
+        };
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [
             go
@@ -58,6 +64,14 @@
               go build .
             '');
           };
+          security = {
+            type = "app";
+            program = toString (pkgs.writeShellScript "security" ''
+              set -e
+              echo "==> Running vulnerability check..."
+              govulncheck ./...
+            '');
+          };
           ci = {
             type = "app";
             program = toString (pkgs.writeShellScript "check" ''
@@ -67,8 +81,6 @@
               echo "==> Running linter..."
               go vet ./...
               golangci-lint run ./...
-              echo "==> Running vulnerability check..."
-              govulncheck ./...
               echo "==> Running test..."
               go test -cover ./...
               echo "==> Running build..."
