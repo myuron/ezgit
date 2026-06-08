@@ -16,6 +16,12 @@
         pkgs = nixpkgs.legacyPackages.${system};
       in
       {
+        packages.default = pkgs.buildGoModule {
+          pname = "ezgit";
+          version = "1.0.0";
+          src = ./.;
+          vendorHash = "sha256-EgR9jdoH2m4Qj5cos5C5pVp2QP4XXt+2b/bktTa0//E=";
+        };
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [
             go
